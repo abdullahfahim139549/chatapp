@@ -1,363 +1,81 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ChatApp</title>
+    <title>Firebase Chat App - Authentication</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f0f2f5;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-        }
-
-        #auth-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100%;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        #chat-container {
-            display: none;
-            flex-direction: column;
-            height: 100%;
-        }
-
-        #header {
-            background-color: #0084ff;
-            color: white;
-            padding: 10px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        #header button {
-            background-color: #ff4444;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        #header button:hover {
-            background-color: #cc0000;
-        }
-
-        #chat-area {
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px;
-        }
-
-        .message {
-            margin: 10px 0;
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 20px auto; padding: 20px; border: 1px solid #eee; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        h1, h2 { color: #333; }
+        input[type="email"], input[type="password"] {
+            width: calc(100% - 22px);
             padding: 10px;
-            border-radius: 8px;
-            max-width: 70%;
-            word-wrap: break-word;
-        }
-
-        .sent {
-            background-color: #0084ff;
-            color: white;
-            margin-left: auto;
-        }
-
-        .received {
-            background-color: #ffffff;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-        }
-
-        .message .user {
-            font-weight: bold;
-            font-size: 0.9em;
-            margin-bottom: 5px;
-        }
-
-        .message .time {
-            font-size: 0.8em;
-            opacity: 0.7;
-            margin-top: 5px;
-        }
-
-        #input-area {
-            display: flex;
-            padding: 10px;
-            background-color: #ffffff;
-            border-top: 1px solid #ddd;
-        }
-
-        #message-input {
-            flex: 1;
-            padding: 10px;
+            margin-bottom: 10px;
             border: 1px solid #ddd;
-            border-radius: 20px;
+            border-radius: 4px;
+        }
+        button {
+            padding: 10px 15px;
             margin-right: 10px;
-        }
-
-        #send-button {
-            background-color: #0084ff;
+            background-color: #4CAF50;
             color: white;
             border: none;
-            padding: 10px 20px;
-            border-radius: 20px;
+            border-radius: 4px;
             cursor: pointer;
+            font-size: 16px;
         }
-
-        #send-button:hover {
-            background-color: #0066cc;
+        button:hover {
+            background-color: #45a049;
         }
-
-        #google-login {
-            background-color: #ffffff;
-            border: 1px solid #ddd;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+        button#signoutBtn {
+            background-color: #f44336;
         }
-
-        #google-login:hover {
-            background-color: #f8f8f8;
+        button#signoutBtn:hover {
+            background-color: #da190b;
         }
-
-        #error-message {
+        button#googleSigninBtn {
+            background-color: #db4437;
+        }
+        button#googleSigninBtn:hover {
+            background-color: #c23321;
+        }
+        #userStatus {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #e7f3fe;
+            border: 1px solid #cce7ff;
+            border-radius: 4px;
+        }
+        #errorMessage {
             color: red;
-            text-align: center;
-            display: none;
-            max-width: 80%;
-            margin: 10px;
+            margin-top: 10px;
         }
     </style>
 </head>
 <body>
-    <div id="auth-container">
-        <h1>ChatApp</h1>
-        <button id="google-login">
-            <img src="https://www.gstatic.com/firebasejs/ui/4.8.0/images/google-signin.png" alt="Google" width="20">
-            Sign in with Google
-        </button>
-        <p id="error-message"></p>
-    </div>
-    <div id="chat-container">
-        <div id="header">
-            <h2>ChatApp</h2>
-            <button id="logout-button">Logout</button>
-        </div>
-        <div id="chat-area"></div>
-        <div id="input-area">
-            <input type="text" id="message-input" placeholder="Type a message...">
-            <button id="send-button">Send</button>
-        </div>
+    <h1>Firebase Authentication Example</h1>
+
+    <h2>Email & Password</h2>
+    <div>
+        <input type="email" id="email" placeholder="Email" required>
+        <input type="password" id="password" placeholder="Password" required>
+        <button id="signupBtn">Sign Up</button>
+        <button id="signinBtn">Sign In</button>
     </div>
 
-    <!-- Firebase SDK v10.15.0 -->
-    <script src="https://www.gstatic.com/firebasejs/10.15.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.15.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.15.0/firebase-firestore-compat.js"></script>
-    <script>
-        // Firebase configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyAvtf5C-BvAm4YAxTwPz_bv99wNJEW25qg",
-            authDomain: "chatapp-cef00.firebaseapp.com",
-            projectId: "chatapp-cef00",
-            storageBucket: "chatapp-cef00.firebasestorage.app",
-            messagingSenderId: "808161438393",
-            appId: "1:808161438393:web:2cceab66779dd73afac968"
-        };
+    <h2>Google Authentication</h2>
+    <div>
+        <button id="googleSigninBtn">Sign In with Google</button>
+    </div>
 
-        // Initialize Firebase
-        let auth, db;
-        try {
-            const app = firebase.initializeApp(firebaseConfig);
-            auth = firebase.auth();
-            db = firebase.firestore();
-            console.log("Firebase initialized successfully");
-        } catch (error) {
-            showError('Firebase initialization failed: ' + error.message);
-            console.error("Firebase init error:", error);
-            throw error; // Stop execution if Firebase fails to initialize
-        }
+    <h2 style="margin-top: 30px;">Current User Status</h2>
+    <div id="userStatus">No user logged in.</div>
+    <div>
+        <button id="signoutBtn" style="margin-top: 15px;">Sign Out</button>
+    </div>
 
-        // DOM elements
-        const authContainer = document.getElementById('auth-container');
-        const chatContainer = document.getElementById('chat-container');
-        const googleLoginButton = document.getElementById('google-login');
-        const logoutButton = document.getElementById('logout-button');
-        const messageInput = document.getElementById('message-input');
-        const sendButton = document.getElementById('send-button');
-        const chatArea = document.getElementById('chat-area');
-        const errorMessage = document.getElementById('error-message');
+    <div id="errorMessage"></div>
 
-        // Show error message
-        function showError(message) {
-            errorMessage.style.display = 'block';
-            errorMessage.textContent = message;
-            console.error("Error:", message);
-        }
-
-        // Clear error message
-        function clearError() {
-            errorMessage.style.display = 'none';
-            errorMessage.textContent = '';
-        }
-
-        // Google Sign-in
-        googleLoginButton.addEventListener('click', () => {
-            clearError();
-            const provider = new firebase.auth.GoogleAuthProvider();
-            auth.signInWithPopup(provider)
-                .then(() => {
-                    console.log("Google sign-in successful");
-                })
-                .catch(error => {
-                    showError('Sign-in failed: ' + error.message);
-                    console.error("Sign-in error:", error);
-                });
-        });
-
-        // Logout
-        logoutButton.addEventListener('click', () => {
-            clearError();
-            auth.signOut()
-                .then(() => {
-                    console.log("Sign-out successful");
-                })
-                .catch(error => {
-                    showError('Sign-out failed: ' + error.message);
-                    console.error("Sign-out error:", error);
-                });
-        });
-
-        // Auth state listener
-        auth.onAuthStateChanged(user => {
-            clearError();
-            if (user) {
-                console.log("User signed in:", user.displayName);
-                authContainer.style.display = 'none';
-                chatContainer.style.display = 'flex';
-                loadMessages();
-            } else {
-                console.log("No user signed in");
-                authContainer.style.display = 'flex';
-                chatContainer.style.display = 'none';
-                chatArea.innerHTML = '';
-            }
-        });
-
-        // Send message
-        function sendMessage() {
-            const message = messageInput.value.trim();
-            if (!message) {
-                showError('Please enter a message');
-                return;
-            }
-
-            const user = auth.currentUser;
-            if (!user) {
-                showError('You must be signed in to send messages');
-                return;
-            }
-
-            db.collection('messages').add({
-                text: message,
-                userId: user.uid,
-                userName: user.displayName || 'Anonymous',
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            })
-            .then(() => {
-                console.log("Message sent successfully");
-                messageInput.value = '';
-                chatArea.scrollTop = chatArea.scrollHeight;
-            })
-            .catch(error => {
-                showError('Failed to send message: ' + error.message);
-                console.error("Send message error:", error);
-            });
-        }
-
-        sendButton.addEventListener('click', sendMessage);
-        messageInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter' && messageInput.value.trim()) {
-                sendMessage();
-            }
-        });
-
-        // Load messages
-        function loadMessages() {
-            db.collection('messages')
-                .orderBy('timestamp')
-                .onSnapshot(snapshot => {
-                    chatArea.innerHTML = '';
-                    snapshot.forEach(doc => {
-                        const message = doc.data();
-                        const messageElement = document.createElement('div');
-                        const isSent = message.userId === auth.currentUser.uid;
-                        messageElement.className = `message ${isSent ? 'sent' : 'received'}`;
-                        messageElement.innerHTML = `
-                            <div class="user">${message.userName}</div>
-                            <div>${message.text}</div>
-                            <div class="time">${message.timestamp ? new Date(message.timestamp.toDate()).toLocaleTimeString() : 'Sending...'}</div>
-                        `;
-                        chatArea.appendChild(messageElement);
-                    });
-                    chatArea.scrollTop = chatArea.scrollHeight;
-                    console.log("Messages loaded successfully");
-                }, error => {
-                    showError('Failed to load messages: ' + error.message);
-                    console.error("Load messages error:", error);
-                });
-        }
-    </script>
+    <script type="module" src="main.js"></script>
 </body>
 </html>
