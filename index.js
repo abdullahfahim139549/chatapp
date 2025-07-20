@@ -1,26 +1,27 @@
-// main.js
+// index.js
 
 // 1. Import Firebase SDKs
 import { initializeApp } from "firebase/app";
-import { 
-    getAuth, 
-    createUserWithEmailAndPassword, 
-    signInWithEmailAndPassword, 
-    onAuthStateChanged, 
+import {
+    getAuth,
+    createUserWithEmailAndPassword,
+    signInWithEmailAndPassword,
+    onAuthStateChanged,
     signOut,
-    GoogleAuthProvider, 
-    signInWithPopup 
+    GoogleAuthProvider,
+    signInWithPopup
 } from "firebase/auth";
 
 // 2. Your Firebase Configuration
 // IMPORTANT: Replace these with your actual Firebase project configuration
+// You can find this in your Firebase Console -> Project settings -> Your apps -> Web app
 const firebaseConfig = {
-    apiKey: "AIzaSyAvtf5C-BvAm4YAxTwPz_bv99wNJEW25qg", // Replace with your actual apiKey
-    authDomain: "chatapp-cef00.firebaseapp.com", // Replace with your actual authDomain
-    projectId: "chatapp-cef00", // Replace with your actual projectId
-    storageBucket: "chatapp-cef00.firebasestorage.app", // Replace with your actual storageBucket
-    messagingSenderId: "808161438393", // Replace with your actual messagingSenderId
-    appId: "1:808161438393:web:2cceab66779dd73afac968" // Replace with your actual appId
+    apiKey: "AIzaSyAvtf5C-BvAm4YAxTwPz_bv99wNJEW25qg", // YOUR_API_KEY
+    authDomain: "chatapp-cef00.firebaseapp.com", // YOUR_PROJECT_ID.firebaseapp.com
+    projectId: "chatapp-cef00", // YOUR_PROJECT_ID
+    storageBucket: "chatapp-cef00.firebasestorage.app", // YOUR_PROJECT_ID.appspot.com
+    messagingSenderId: "808161438393", // YOUR_MESSAGING_SENDER_ID
+    appId: "1:808161438393:web:2cceab66779dd73afac968" // YOUR_APP_ID
 };
 
 // 3. Initialize Firebase
@@ -40,12 +41,14 @@ const errorMessageDiv = document.getElementById('errorMessage');
 // Helper function to display errors
 function displayError(message) {
     errorMessageDiv.textContent = message;
+    errorMessageDiv.classList.add('show'); // Add class to make it visible
     console.error(message);
 }
 
 // Helper function to clear errors
 function clearError() {
     errorMessageDiv.textContent = '';
+    errorMessageDiv.classList.remove('show'); // Remove class to hide it
 }
 
 // --- 5. Authentication Event Listeners ---
@@ -65,8 +68,10 @@ signupBtn.addEventListener('click', async () => {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         console.log("User signed up:", userCredential.user);
         alert("Account created successfully! Welcome.");
+        // Clear input fields after successful signup/signin
+        emailInput.value = '';
+        passwordInput.value = '';
     } catch (error) {
-        // Handle specific Firebase errors for better user feedback
         let errorMessage = "An unknown error occurred during sign up.";
         switch (error.code) {
             case 'auth/email-already-in-use':
@@ -100,6 +105,9 @@ signinBtn.addEventListener('click', async () => {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         console.log("User signed in:", userCredential.user);
         alert("Successfully signed in!");
+        // Clear input fields after successful signup/signin
+        emailInput.value = '';
+        passwordInput.value = '';
     } catch (error) {
         let errorMessage = "An unknown error occurred during sign in.";
         switch (error.code) {
@@ -127,16 +135,11 @@ googleSigninBtn.addEventListener('click', async () => {
 
     try {
         const result = await signInWithPopup(auth, provider);
-        // The signed-in user info.
         const user = result.user;
         console.log("Google sign-in successful:", user);
         alert(`Signed in with Google: ${user.displayName || user.email}`);
-        // You can get the Google Access Token if needed:
-        // const credential = GoogleAuthProvider.credentialFromResult(result);
-        // const token = credential.accessToken;
     } catch (error) {
         let errorMessage = "An unknown error occurred during Google sign-in.";
-        // Handle specific errors for Google sign-in
         switch (error.code) {
             case 'auth/popup-closed-by-user':
                 errorMessage = "Google sign-in popup was closed.";
@@ -145,10 +148,10 @@ googleSigninBtn.addEventListener('click', async () => {
                 errorMessage = "Google sign-in popup already in progress.";
                 break;
             case 'auth/account-exists-with-different-credential':
-                errorMessage = "An account with this email already exists using a different sign-in method.";
+                errorMessage = "An account with this email already exists using a different sign-in method. Please sign in with that method.";
                 break;
             case 'auth/unauthorized-domain':
-                errorMessage = "Unauthorized domain. Please add your domain to Firebase authorized domains.";
+                errorMessage = "Unauthorized domain. Please add your domain to Firebase authorized domains in the Firebase Console.";
                 break;
             default:
                 errorMessage = `Google Sign-in Error: ${error.message}`;
@@ -170,23 +173,18 @@ signoutBtn.addEventListener('click', async () => {
 });
 
 // --- 6. Authentication State Listener (Essential for UI updates) ---
-// This listener fires whenever the user's sign-in state changes (login, logout)
 onAuthStateChanged(auth, (user) => {
     if (user) {
-        // User is signed in
         userStatusDiv.innerHTML = `
             <strong>Logged in as:</strong><br>
             Email: ${user.email || 'N/A'}<br>
             Display Name: ${user.displayName || 'N/A'}<br>
             UID: ${user.uid}<br>
-            Provider: ${user.providerData[0].providerId}
+            Provider: ${user.providerData[0].providerId.replace('firebase.', '').replace('.com', '').toUpperCase()}
         `;
-        // Example: You might show the chat interface here and hide login forms
-        console.log("Current user:", user);
+        // You would typically show chat UI and hide login forms here
     } else {
-        // User is signed out
         userStatusDiv.textContent = "No user logged in.";
-        // Example: You might hide the chat interface and show login forms
-        console.log("No user logged in.");
+        // You would typically hide chat UI and show login forms here
     }
 });
