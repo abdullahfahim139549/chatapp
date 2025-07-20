@@ -3,79 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Firebase Chat App - Authentication</title>
-    <style>
-        body { font-family: Arial, sans-serif; max-width: 600px; margin: 20px auto; padding: 20px; border: 1px solid #eee; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-        h1, h2 { color: #333; }
-        input[type="email"], input[type="password"] {
-            width: calc(100% - 22px);
-            padding: 10px;
-            margin-bottom: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-        button {
-            padding: 10px 15px;
-            margin-right: 10px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
-        button#signoutBtn {
-            background-color: #f44336;
-        }
-        button#signoutBtn:hover {
-            background-color: #da190b;
-        }
-        button#googleSigninBtn {
-            background-color: #db4437;
-        }
-        button#googleSigninBtn:hover {
-            background-color: #c23321;
-        }
-        #userStatus {
-            margin-top: 20px;
-            padding: 10px;
-            background-color: #e7f3fe;
-            border: 1px solid #cce7ff;
-            border-radius: 4px;
-        }
-        #errorMessage {
-            color: red;
-            margin-top: 10px;
-        }
-    </style>
-</head>
+    <title>Firebase Chat App - Auth</title>
+    <link rel="stylesheet" href="index.css"> </head>
 <body>
-    <h1>Firebase Authentication Example</h1>
+    <div class="container">
+        <h1>Firebase Authentication Example</h1>
 
-    <h2>Email & Password</h2>
-    <div>
-        <input type="email" id="email" placeholder="Email" required>
-        <input type="password" id="password" placeholder="Password" required>
-        <button id="signupBtn">Sign Up</button>
-        <button id="signinBtn">Sign In</button>
+        <section class="auth-section">
+            <h2>Email & Password</h2>
+            <div class="input-group">
+                <input type="email" id="email" placeholder="Email" required>
+                <input type="password" id="password" placeholder="Password" required>
+            </div>
+            <div class="button-group">
+                <button id="signupBtn">Sign Up</button>
+                <button id="signinBtn">Sign In</button>
+            </div>
+        </section>
+
+        <section class="auth-section">
+            <h2>Google Authentication</h2>
+            <div class="button-group">
+                <button id="googleSigninBtn" class="google-btn">
+                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google logo">
+                    Sign In with Google
+                </button>
+            </div>
+        </section>
+
+        <section class="user-status-section">
+            <h2>Current User Status</h2>
+            <div id="userStatus" class="status-box">No user logged in.</div>
+            <div class="button-group">
+                <button id="signoutBtn" class="signout-btn">Sign Out</button>
+            </div>
+        </section>
+
+        <div id="errorMessage" class="error-message"></div>
     </div>
 
-    <h2>Google Authentication</h2>
-    <div>
-        <button id="googleSigninBtn">Sign In with Google</button>
-    </div>
-
-    <h2 style="margin-top: 30px;">Current User Status</h2>
-    <div id="userStatus">No user logged in.</div>
-    <div>
-        <button id="signoutBtn" style="margin-top: 15px;">Sign Out</button>
-    </div>
-
-    <div id="errorMessage"></div>
-
-    <script type="module" src="main.js"></script>
+    <script type="module" src="index.js"></script>
 </body>
 </html>
